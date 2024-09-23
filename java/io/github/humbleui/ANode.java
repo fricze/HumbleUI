@@ -2,11 +2,13 @@ package io.github.humbleui.interfaces;
 
 import java.util.Objects;
 import io.github.humbleui.interfaces.IComponent;
+import io.github.humbleui.types.IPoint;
+import io.github.humbleui.types.IRect;
 
 public abstract class ANode implements IComponent {
     public Object element;
     public ANode parent;
-    public Object bounds;
+    public IRect bounds;
     public Object containerSize;
     public Object thisSize;
     public Object key;
@@ -27,37 +29,63 @@ public abstract class ANode implements IComponent {
 
     public abstract void setContainerSizeImpl(Object ctx, Object containerSize);
 
-    // public Object measure(Object ctx, Object cs) {
-    //     ctx = context(ctx);
-    //     setContainerSize(ctx, cs);
-    //     maybeRender(ctx);
-    //     if (thisSize != null) {
-    //         return thisSize;
-    //     } else {
-    //         Object size = measureImpl(ctx, cs);
-    //         thisSize = size;
-    //         return size;
-    //     }
-    // }
+    public Object measure(Object ctx, Object cs) {
+        ctx = context(ctx);
+        setContainerSize(ctx, cs);
+        maybeRender(ctx);
 
-    // protected abstract Object measureImpl(Object ctx, Object cs);
+        if (thisSize != null) {
+            return thisSize;
+        } else {
+            Object size = measureImpl(ctx, cs);
+            thisSize = size;
+            return size;
+        }
+    }
 
-    // public void draw(Object ctx, Object bounds, Object containerSize, Object viewport, Canvas canvas) {
-    //     this.bounds = bounds;
-    //     setContainerSize(ctx, containerSize);
-    //     if (irectIntersect(bounds, viewport)) {
-    //         ctx = context(ctx);
-    //         maybeRender(ctx);
-    //         drawImpl(ctx, bounds, containerSize, viewport, canvas);
-    //         if (isDebugMode() && !mounted) {
-    //             // Draw border (equivalent to the Clojure code)
-    //             drawBorder(ctx, bounds, canvas);
-    //             mounted = true;
-    //         }
-    //     }
-    // }
+    protected abstract Object measureImpl(Object ctx, Object cs);
 
-    // protected abstract void drawImpl(Object ctx, Object bounds, Object containerSize, Object viewport, Canvas canvas);
+    public void maybeRender(Object ctx) {
+        // (node instanceof FnNode && node.shouldRender() &&
+        //  node.shouldRender.apply(node.getElement().subList(1, node.getElement().size())))
+        if (dirty) {
+            ctx = context(ctx);
+            reconcileChildren(ctx, element);
+            reconcileOpts(ctx, element);
+
+            dirty = false;
+        }
+    }
+
+    // protected abstract void maybeRender(Object ctx);
+
+    public static boolean iRectIntersect(IRect a, IRect b) {
+        if (a != null && b != null) {
+            if (a.intersect(b) != null) {
+                return true;
+            }
+
+            return false;
+        }
+        return false;
+    }
+
+    public void draw(Object ctx, IRect bounds, Object containerSize, IRect viewport, Object canvas) {
+        this.bounds = bounds;
+        setContainerSize(ctx, containerSize);
+
+        if (iRectIntersect(bounds, viewport)) {
+            ctx = context(ctx);
+            maybeRender(ctx);
+            drawImpl(ctx, bounds, containerSize, viewport, canvas);
+            if (isDebugMode() && !mounted) {
+                drawBorder(ctx, bounds, canvas);
+                this.mounted = true;
+            }
+        }
+    }
+
+    public abstract void drawImpl(Object ctx, IRect bounds, Object containerSize, Object viewport, Object canvas);
 
     // // Handles the event processing
     // public void event(Object ctx, Object event) {
@@ -103,24 +131,20 @@ public abstract class ANode implements IComponent {
     //     thisSize = null;
     // }
 
-    // protected boolean irectIntersect(Object bounds, Object viewport) {
-    //     // Dummy intersection logic
-    //     return true;
-    // }
-
-    // protected void maybeRender(Object ctx) {
-    //     // Dummy rendering logic
-    // }
+    protected boolean irectIntersect(IRect bounds, Object viewport) {
+        // Dummy intersection logic
+        return true;
+    }
 
     // protected String getEventType(Object event) {
     //     // Dummy event type handling
     //     return "event-type";
     // }
 
-    // protected boolean isDebugMode() {
-    //     // Assume a debugging mode flag
-    //     return false;
-    // }
+    public boolean isDebugMode() {
+        // Assume a debugging mode flag
+        return false;
+    }
 
     // protected void drawBorder(Object ctx, Object bounds, Canvas canvas) {
     //     // Dummy implementation to draw the border

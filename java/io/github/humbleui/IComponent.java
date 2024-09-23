@@ -21,4 +21,5 @@ public interface IComponent {
     Object reconcileOpts(Object ctx, Object newEl);
     void unmount();
     void unmountImpl();
+    void maybeRender(Object ctx);
 }
